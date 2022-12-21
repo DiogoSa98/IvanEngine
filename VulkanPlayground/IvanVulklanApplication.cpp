@@ -42,13 +42,16 @@ namespace Ivan {
     IvanVulkanApplication::IvanVulkanApplication(IvanWindow& window) : window(window) {
         InitVulkan();
         SetupDebugMessenger();
+        PickPhysicalDevice();
+        CreateLogicalDevice();
     }
     
     IvanVulkanApplication::~IvanVulkanApplication() {
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
-
+        
+        vkDestroyDevice(device, nullptr);
         vkDestroyInstance(instance, nullptr);
     }
 
@@ -192,5 +195,124 @@ namespace Ivan {
         if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
             throw std::runtime_error("failed to set up debug messenger!");
         }
+    }
+
+
+    void IvanVulkanApplication::PickPhysicalDevice() {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+        if (deviceCount == 0) {
+            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        }
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+    
+        // Use an ordered map to automatically sort candidates by increasing score
+        std::multimap<int, VkPhysicalDevice> candidates;
+
+        for (const auto& device : devices) {
+            int score = RateDeviceSuitability(device);
+            candidates.insert(std::make_pair(score, device));
+        }
+        // Check if the best candidate is suitable
+        if (candidates.rbegin()->first > 0) {
+            physicalDevice = candidates.rbegin()->second;
+        }
+        else {
+            throw std::runtime_error("failed to find a suitable GPU!");
+        }
+    }
+
+    int IvanVulkanApplication::RateDeviceSuitability(VkPhysicalDevice device) {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+        VkPhysicalDeviceFeatures deviceFeatures;
+        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+        
+        QueueFamilyIndices indices = FindQueueFamilies(device);
+        if (!indices.IsComplete()) return 0;
+
+        int score = 0;
+
+        // Discrete GPUs have a significant performance advantage
+        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            score += 1000;
+        }
+
+        // Maximum possible size of textures affects graphics quality
+        score += deviceProperties.limits.maxImageDimension2D;
+
+        // Application can't function without geometry shaders
+        //if (!deviceFeatures.geometryShader) {
+        //    return 0;
+        //}
+
+        return score;
+    }
+
+    QueueFamilyIndices IvanVulkanApplication::FindQueueFamilies(VkPhysicalDevice device) {
+        QueueFamilyIndices indices;
+        // Logic to find queue family indices to populate struct with
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+        for (const auto& queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                indices.graphicsFamily = i;
+            }
+            
+            if (indices.IsComplete()) { // early exit if found complete queueFamily
+                break;
+            }
+            
+            i++;
+        }
+
+        return indices;
+    }
+
+    void IvanVulkanApplication::CreateLogicalDevice() {
+        QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+        queueCreateInfo.queueCount = 1; // number of queues we want for a single queue family
+
+        // required even if using a single queue
+        float queuePriority = 1.0f;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        // set of device features, queried at vkGetPhysicalDeviceFeatures, that we'll be using
+        VkPhysicalDeviceFeatures deviceFeatures{};
+
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.queueCreateInfoCount = 1;
+
+        createInfo.pEnabledFeatures = &deviceFeatures;
+
+        // there is no longer a distinction between instance and device validation layers so this is unnecessary
+        // adding it anyway to be compatible with older Vulkan versions
+        createInfo.enabledExtensionCount = 0;
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        }
+        else {
+            createInfo.enabledLayerCount = 0;
+        }
+
+        if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create logical device!");
+        }
+
+        // retrieve queue handles for each queue family (only creating a single queue for now)
+        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     }
 }
