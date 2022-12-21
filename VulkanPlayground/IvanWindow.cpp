@@ -1,13 +1,15 @@
 #include "IvanWindow.hpp"
 
 namespace Ivan {
-	IvanWindow::IvanWindow(int w, int h, std::string name) : width(w), height(h), windowName(name) {
+	IvanWindow::IvanWindow(int width, int height, std::string name) : width(width), height(height), windowName(name) {
 		InitWindow();
 	}
+	
 	IvanWindow::~IvanWindow() {
 		glfwDestroyWindow(window);
-		glfwTerminate();
+		glfwTerminate(); 
 	}
+
 	void IvanWindow::InitWindow() {
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // don't create OpenGL context

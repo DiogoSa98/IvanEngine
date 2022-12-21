@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IvanWindow.hpp"
+#include "IvanVulklanApplication.hpp"
 
 namespace Ivan {
 	class Ivan {
@@ -13,5 +14,6 @@ namespace Ivan {
 	
 	private:
 		IvanWindow ivanWindow{ WIDTH, HEIGHT, "Ivan" };
+		IvanVulkanApplication ivanVulkanApp{ ivanWindow };
 	};
 }

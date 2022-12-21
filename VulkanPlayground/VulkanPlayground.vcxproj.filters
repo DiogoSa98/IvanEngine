@@ -21,7 +21,10 @@
     <ClCompile Include="IvanWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IvanMain.cpp">
+    <ClCompile Include="Ivan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IvanVulklanApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,7 +32,10 @@
     <ClInclude Include="IvanWindow.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="IvanMain.hpp">
+    <ClInclude Include="Ivan.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IvanVulklanApplication.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,7 @@ namespace Ivan {
 
 	class IvanWindow {
 	public: 
-		IvanWindow(int w, int h, std::string name);
+		IvanWindow(int width, int height, std::string name);
 		~IvanWindow();
 
 		// don't accidently copy the window address

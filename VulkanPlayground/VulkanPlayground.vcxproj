@@ -143,12 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="IvanVulklanApplication.cpp" />
     <ClCompile Include="IvanWindow.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="IvanMain.cpp" />
+    <ClCompile Include="Ivan.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IvanMain.hpp" />
+    <ClInclude Include="Ivan.hpp" />
+    <ClInclude Include="IvanVulklanApplication.hpp" />
     <ClInclude Include="IvanWindow.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
