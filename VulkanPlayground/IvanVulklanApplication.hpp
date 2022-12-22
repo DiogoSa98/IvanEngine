@@ -88,5 +88,8 @@ namespace Ivan {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		void CreateSwapChain();
+
+		std::vector<VkImageView> swapChainImageViews;
+		void CreateImageViews();
 	};
 }
