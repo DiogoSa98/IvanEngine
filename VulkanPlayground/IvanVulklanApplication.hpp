@@ -7,6 +7,7 @@
 #include <map>
 #include <optional>
 #include <set>
+#include <fstream>
 
 #include "IvanWindow.hpp"
 
@@ -27,6 +28,25 @@ namespace Ivan {
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
+
+	// Read all of the bytes from the specified file and return them in a byte array
+	static std::vector<char> ReadFile(const std::string& filename) {
+		std::ifstream file(filename, std::ios::ate | std::ios::binary); // start at eof to allocate buffer with size of file
+
+		if (!file.is_open()) {
+			throw std::runtime_error("failed to open file!");
+		}
+
+		size_t fileSize = (size_t)file.tellg();
+		std::vector<char> buffer(fileSize);
+
+		file.seekg(0);
+		file.read(buffer.data(), fileSize);
+
+		file.close();
+
+		return buffer;
+	}
 
 	class IvanVulkanApplication {
 	public:
@@ -91,5 +111,16 @@ namespace Ivan {
 
 		std::vector<VkImageView> swapChainImageViews;
 		void CreateImageViews();
+
+
+		VkPipeline graphicsPipeline;
+		VkPipelineLayout pipelineLayout;
+		void CreateGraphicsPipeline();
+
+		VkShaderModule CreateShaderModule(const std::vector<char>& code);
+
+		VkRenderPass renderPass;
+		void CreateRenderPass();
+
 	};
 }
