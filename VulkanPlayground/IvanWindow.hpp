@@ -1,7 +1,11 @@
 #pragma once
+
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
 #include <string>
+#include <stdexcept>
+#include <algorithm>
 
 namespace Ivan {
 
@@ -16,6 +20,8 @@ namespace Ivan {
 
 		bool shouldClose() { return glfwWindowShouldClose(window); }
 
+		void CreateWindowSurface(VkInstance vkInstance, VkSurfaceKHR* surface);
+		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	private:
 		void InitWindow();
 
