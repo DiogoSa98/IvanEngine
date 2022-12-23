@@ -65,6 +65,10 @@ namespace Ivan {
 		const std::vector<const char*> deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
+
+		VkDevice Device() { return device; }
+	
+		void DrawFrame();
 	
 	private:
 		VkInstance instance;
@@ -121,6 +125,22 @@ namespace Ivan {
 
 		VkRenderPass renderPass;
 		void CreateRenderPass();
+
+		std::vector<VkFramebuffer> swapChainFramebuffers;
+		void CreateFramebuffers();
+
+		VkCommandPool commandPool;
+		void CreateCommandPool();
+
+		VkCommandBuffer commandBuffer;
+		void CreateCommandBuffer();
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+
+		VkSemaphore imageAvailableSemaphore;
+		VkSemaphore renderFinishedSemaphore;
+		VkFence inFlightFence;
+		void CreateSyncObjects();
 
 	};
 }
