@@ -13,9 +13,10 @@ namespace Ivan {
 	void IvanWindow::InitWindow() {
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // don't create OpenGL context
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 		window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+		glfwSetWindowUserPointer(window, this);
+		glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 	}
 
 	void IvanWindow::CreateWindowSurface(VkInstance vkInstance, VkSurfaceKHR* surface) {
@@ -41,6 +42,19 @@ namespace Ivan {
 			actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
 			return actualExtent;
+		}
+	}
+
+	void IvanWindow::FramebufferResizeCallback(GLFWwindow* window, int width, int height) {
+		reinterpret_cast<IvanWindow*>(glfwGetWindowUserPointer(window))->framebufferResized = true;
+	}
+
+	void IvanWindow::HandleMinimization() {
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(window, &width, &height);
+		while (width == 0 || height == 0) {
+			glfwGetFramebufferSize(window, &width, &height);
+			glfwWaitEvents();
 		}
 	}
 }

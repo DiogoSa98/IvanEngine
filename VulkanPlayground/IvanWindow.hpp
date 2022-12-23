@@ -22,6 +22,11 @@ namespace Ivan {
 
 		void CreateWindowSurface(VkInstance vkInstance, VkSurfaceKHR* surface);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+		bool FramebufferResized() { return framebufferResized; }
+		void FramebufferResized(bool resized) { framebufferResized = resized; }
+
+		void HandleMinimization();
 	private:
 		void InitWindow();
 
@@ -29,5 +34,7 @@ namespace Ivan {
 
 		std::string windowName;
 		GLFWwindow* window;
+		bool framebufferResized;
+		static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 	};
 }

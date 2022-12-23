@@ -68,6 +68,7 @@ namespace Ivan {
 
 		VkDevice Device() { return device; }
 	
+		uint32_t currentFrame = 0;
 		void DrawFrame();
 	
 	private:
@@ -112,6 +113,8 @@ namespace Ivan {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		void CreateSwapChain();
+		void CleanupSwapChain();
+		void RecreateSwapChain();
 
 		std::vector<VkImageView> swapChainImageViews;
 		void CreateImageViews();
@@ -132,14 +135,15 @@ namespace Ivan {
 		VkCommandPool commandPool;
 		void CreateCommandPool();
 
-		VkCommandBuffer commandBuffer;
-		void CreateCommandBuffer();
+		std::vector<VkCommandBuffer> commandBuffers;
+		void CreateCommandBuffers();
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 
-		VkSemaphore imageAvailableSemaphore;
-		VkSemaphore renderFinishedSemaphore;
-		VkFence inFlightFence;
+		const int MAX_FRAMES_IN_FLIGHT = 2;
+		std::vector<VkSemaphore> imageAvailableSemaphores;
+		std::vector<VkSemaphore> renderFinishedSemaphores;
+		std::vector<VkFence> inFlightFences;
 		void CreateSyncObjects();
 
 	};
