@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+
 namespace Ivan {
 
 	class IvanWindow {
