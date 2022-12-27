@@ -11,9 +11,13 @@
 #include <array>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
 
 #include "IvanWindow.hpp"
 
+#define GLM_FORCE_RADIANS
 
 namespace Ivan {
 	
@@ -89,6 +93,12 @@ namespace Ivan {
 	};
 	const std::vector<uint16_t> indices = {
 		0, 1, 2, 2, 3, 0
+	};
+
+	struct UniformBufferObject {
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 proj;
 	};
 
 	class IvanVulkanApplication {
@@ -167,6 +177,10 @@ namespace Ivan {
 		VkPipelineLayout pipelineLayout;
 		void CreateGraphicsPipeline();
 
+		VkDescriptorSetLayout descriptorSetLayout;
+		void CreateDescriptorSetLayout();
+
+
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
 		VkRenderPass renderPass;
@@ -198,5 +212,16 @@ namespace Ivan {
 		void CreateIndexBuffer();
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+		std::vector<VkBuffer> uniformBuffers;
+		std::vector<VkDeviceMemory> uniformBuffersMemory;
+		std::vector<void*> uniformBuffersMapped;
+		void CreateUniformBuffers();
+		void UpdateUniformBuffer(uint32_t currentImage);
+
+		VkDescriptorPool descriptorPool;
+		void CreateDescriptorPool();
+		std::vector<VkDescriptorSet> descriptorSets;
+		void CreateDescriptorSets();
 	};
 }
