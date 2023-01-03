@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
 
-#include <vulkan/vulkan_core.h> // should not be necessary I think ?????
+#include <vulkan/vulkan_core.h> 
 
 namespace Ivan {
 
@@ -16,15 +16,15 @@ namespace Ivan {
 		glm::vec3 pos;
 		glm::vec3 normal;
 		//glm::vec3 color;
-		//glm::vec2 texCoord;
+		glm::vec2 texCoord;
 
 		static VkVertexInputBindingDescription GetVertexBindingDescription();
 		
-		static std::array<VkVertexInputAttributeDescription, 2> GetVertexAttributeDescriptions();
+		static std::array<VkVertexInputAttributeDescription, 3> GetVertexAttributeDescriptions();
 
 		bool operator==(const Vertex& other) const {
 			//return pos == other.pos && color == other.color && texCoord == other.texCoord;
-			return pos == other.pos && normal == other.normal;
+			return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
 		}
 	};
 
@@ -52,7 +52,8 @@ namespace std {
 			//	(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
 			//	(hash<glm::vec2>()(vertex.texCoord) << 1);
 			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.normal) << 1)) >> 1);
+				(hash<glm::vec2>()(vertex.texCoord) << 1)) >> 1) ^
+				(hash<glm::vec3>()(vertex.normal) << 1);
 		}
 	};
 }

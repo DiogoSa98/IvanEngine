@@ -569,6 +569,9 @@ namespace Ivan {
 
     
     void IvanVulkanApplication::CreateGraphicsPipeline() {
+        printf("Compiling shaders...\n");
+        system("cd shaders/ && compileShaders.bat");
+        printf("Finished shader compilation\n");
         //auto vertShaderCode = ReadFile("shaders/testVert.spv");
         //auto fragShaderCode = ReadFile("shaders/testFrag.spv");
         auto vertShaderCode = ReadFile("shaders/directPBR_vert.spv");

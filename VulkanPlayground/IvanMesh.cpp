@@ -15,8 +15,8 @@ namespace Ivan {
         return bindingDescription;
     }
 
-    std::array<VkVertexInputAttributeDescription, 2> Vertex::GetVertexAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+    std::array<VkVertexInputAttributeDescription, 3> Vertex::GetVertexAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -27,12 +27,11 @@ namespace Ivan {
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, normal);
-        //attributeDescriptions[1].offset = offsetof(Vertex, color);
 
-        //attributeDescriptions[2].binding = 0;
-        //attributeDescriptions[2].location = 2;
-        //attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        //attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
         return attributeDescriptions;
     }
@@ -67,10 +66,10 @@ namespace Ivan {
                     attrib.normals[3 * index.normal_index + 2]
                 };
 
-                //vertex.texCoord = {
-                //    attrib.texcoords[2 * index.texcoord_index + 0],
-                //    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // obj assumes 0 is bottom but Vulkan assumes 0 is top
-                //};
+                vertex.texCoord = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // obj assumes 0 is bottom but Vulkan assumes 0 is top
+                };
 
                 //vertex.color = { 1.0f, 1.0f, 1.0f };
 

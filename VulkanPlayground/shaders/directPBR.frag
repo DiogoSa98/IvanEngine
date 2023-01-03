@@ -4,6 +4,7 @@ layout(location = 0) out vec4 outColor;
 
 layout(location = 0) in vec3 WorldPos;
 layout(location = 1) in vec3 Normal;
+layout(location = 2) in vec2 fragTexCoord;
 
 // material parameters
 //uniform vec3  baseColor;
@@ -15,7 +16,7 @@ float metallic = .9;
 float reflectance = 0.35; // specular intesity and ior of dieletric materials
 float perceptualRoughness = .5;
 float ao = .2;
-float clearCoat = .1;
+float clearCoat = .9;
 float clearCoatPerceptualRoughness = .1;
 
 // lights
@@ -63,7 +64,7 @@ void main()
         Lo += col * radiance * NdotL;
 //    }   
   
-    vec3 ambient = vec3(0.03) * baseColor * ao;
+    vec3 ambient = vec3(0.005) * baseColor * ao;
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));
@@ -126,7 +127,7 @@ vec3 SpecularLobe(float roughness, vec3 f0, float NoV, float NoL, float NoH, flo
 }
 
 
-float ClearCoatDistribution(float NoH, float LoH, float Fcc) {
+float ClearCoatDistribution(float NoH, float LoH, out float F) {
     // TODO cpu side on material 
     // remapping and linearization of clear coat roughness
     clearCoatPerceptualRoughness = clamp(clearCoatPerceptualRoughness, 0.089, 1.0);
@@ -139,10 +140,10 @@ float ClearCoatDistribution(float NoH, float LoH, float Fcc) {
     // clear coat BRDF
     float D = D_GGX(clearCoatRoughness, NoH);
     float V = V_Kelemen(LoH);
-    Fcc = F_Schlick(0.04, 1.0, LoH) * clearCoat; // clear coat strength;  air-polyurethane interface has an IOR of 1.5 gives f0 = 0.04
+    F = F_Schlick(0.04, 1.0, LoH) * clearCoat; // clear coat strength;  air-polyurethane interface has an IOR of 1.5 gives f0 = 0.04
     
     // account for energy loss in the base layer
-    return D * V * Fcc;
+    return D * V * F;
 }
 
 
@@ -166,18 +167,16 @@ vec3 BRDF(vec3 v, vec3 l, vec3 n, vec3 f0, vec3 diffuseColor) {
 
     // diffuse BRDF
     vec3 Fd = diffuseColor * Fd_Lambert(); // TODO try out Disney diffuse
-
     //Fd *= (1.0 - pixel.transmission); // TODO for refractive materials
 
     vec3 color = Fr + Fd;
 
     // TODO if clearcoat
-    float Fcc;
-    float clearCoat = ClearCoatDistribution(NoH, LoH, Fcc);
-    float attenuation = 1.0 - Fcc;
+    float F;
+    float clearCoat = ClearCoatDistribution(NoH, LoH, F);
+    float attenuation = 1.0 - F;
     color *= attenuation;
     color += clearCoat;
-    
     return color;
 }
 
