@@ -3,8 +3,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+//#define TINYOBJLOADER_IMPLEMENTATION
+//#include <tiny_obj_loader.h>
 
 namespace Ivan {
 
@@ -63,9 +63,9 @@ namespace Ivan {
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
-        LoadModel();
-        CreateVertexBuffer();
-        CreateIndexBuffer();
+        testMesh.LoadFromObjFile(MODEL_PATH.c_str());
+        CreateVertexBuffer(&testMesh);
+        CreateIndexBuffer(&testMesh);
         CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
@@ -90,10 +90,10 @@ namespace Ivan {
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-        vkDestroyBuffer(device, indexBuffer, nullptr);
-        vkFreeMemory(device, indexBufferMemory, nullptr);
-        vkDestroyBuffer(device, vertexBuffer, nullptr);
-        vkFreeMemory(device, vertexBufferMemory, nullptr);
+        vkDestroyBuffer(device, testMesh.indexBuffer, nullptr);
+        vkFreeMemory(device, testMesh.indexBufferMemory, nullptr);
+        vkDestroyBuffer(device, testMesh.vertexBuffer, nullptr);
+        vkFreeMemory(device, testMesh.vertexBufferMemory, nullptr);
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -596,8 +596,8 @@ namespace Ivan {
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-        auto bindingDescription = Vertex::GetBindingDescription();
-        auto attributeDescriptions = Vertex::GetAttributeDescriptions();
+        auto bindingDescription = Vertex::GetVertexBindingDescription();
+        auto attributeDescriptions = Vertex::GetVertexAttributeDescriptions();
 
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -856,7 +856,7 @@ namespace Ivan {
         }
     }
 
-    void IvanVulkanApplication::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+    void IvanVulkanApplication::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, struct Mesh* mesh) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0; // Optional
@@ -898,15 +898,15 @@ namespace Ivan {
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        VkBuffer vertexBuffers[] = { vertexBuffer };
+        VkBuffer vertexBuffers[] = { mesh->vertexBuffer };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, mesh->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
 
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->indices.size()), 1, 0, 0, 0);
         vkCmdEndRenderPass(commandBuffer);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -933,7 +933,6 @@ namespace Ivan {
                 throw std::runtime_error("failed to create synchronization objects for a frame!");
             }
         }
-
     }
 
     void IvanVulkanApplication::DrawFrame() {
@@ -956,7 +955,7 @@ namespace Ivan {
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-        RecordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+        RecordCommandBuffer(commandBuffers[currentFrame], imageIndex, &testMesh);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1041,9 +1040,8 @@ namespace Ivan {
         vkBindBufferMemory(device, buffer, bufferMemory, 0);
     }
 
-    void IvanVulkanApplication::CreateVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
+    void IvanVulkanApplication::CreateVertexBuffer(struct Mesh *mesh) {
+        VkDeviceSize bufferSize = sizeof(mesh->vertices[0]) * mesh->vertices.size();
 
         // using a staging buffer so we can send a buffer with VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT to the GPU
         VkBuffer stagingBuffer;
@@ -1058,24 +1056,24 @@ namespace Ivan {
 
         void* data;
         vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), (size_t)bufferSize);
+        memcpy(data, mesh->vertices.data(), (size_t)bufferSize);
         vkUnmapMemory(device, stagingBufferMemory);
 
         CreateBuffer(bufferSize, 
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, // buffer used has destination for memmory transfer or has vertex buffer
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            vertexBuffer, 
-            vertexBufferMemory
+            mesh->vertexBuffer,
+            mesh->vertexBufferMemory
         );
 
-        CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        CopyBuffer(stagingBuffer, mesh->vertexBuffer, bufferSize);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
-    void IvanVulkanApplication::CreateIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    void IvanVulkanApplication::CreateIndexBuffer(struct Mesh* mesh) {
+        VkDeviceSize bufferSize = sizeof(mesh->indices[0]) * mesh->indices.size();
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -1083,12 +1081,12 @@ namespace Ivan {
 
         void* data;
         vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, indices.data(), (size_t)bufferSize);
+        memcpy(data, mesh->indices.data(), (size_t)bufferSize);
         vkUnmapMemory(device, stagingBufferMemory);
 
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh->indexBuffer, mesh->indexBufferMemory);
 
-        CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        CopyBuffer(stagingBuffer, mesh->indexBuffer, bufferSize);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -1230,7 +1228,6 @@ namespace Ivan {
 
     void IvanVulkanApplication::CreateTextureImage() {
         int texWidth, texHeight, texChannels;
-        //stbi_uc* pixels = stbi_load("textures/testTex.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
@@ -1501,10 +1498,6 @@ namespace Ivan {
 
         CreateVkImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
         depthImageView = CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-
-        // don't need to explicitly transition the layout of the image to a depth attachment
-        // because we'll take care of this in the render pass, doing it for completness
-        //TransitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, mipLevels);
     }
 
     VkFormat IvanVulkanApplication::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
@@ -1535,53 +1528,6 @@ namespace Ivan {
 
     bool IvanVulkanApplication::HasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
-
-
-    void IvanVulkanApplication::LoadModel() {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
-
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
-            throw std::runtime_error(warn + err);
-        }
-
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-
-        for (const auto& shape : shapes) {
-            for (const auto& index : shape.mesh.indices) {
-                Vertex vertex{};
-
-                vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-                };
-
-                vertex.normal = {
-                    attrib.normals[3 * index.normal_index + 0],
-                    attrib.normals[3 * index.normal_index + 1],
-                    attrib.normals[3 * index.normal_index + 2]
-                };
-
-                //vertex.texCoord = {
-                //    attrib.texcoords[2 * index.texcoord_index + 0],
-                //    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // obj assumes 0 is bottom but Vulkan assumes 0 is top
-                //};
-
-                //vertex.color = { 1.0f, 1.0f, 1.0f };
-
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
-                }
-
-                indices.push_back(uniqueVertices[vertex]);
-            }
-        }
     }
 
     void IvanVulkanApplication::GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {

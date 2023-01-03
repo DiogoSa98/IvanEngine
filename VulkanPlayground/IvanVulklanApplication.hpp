@@ -21,6 +21,7 @@
 #include <chrono>
 
 #include "IvanWindow.hpp"
+#include "IvanMesh.hpp"
 
 namespace Ivan {
 	
@@ -57,66 +58,6 @@ namespace Ivan {
 
 		return buffer;
 	}
-
-	struct Vertex {
-		glm::vec3 pos;
-		glm::vec3 normal;
-		//glm::vec3 color;
-		//glm::vec2 texCoord;
-
-		static VkVertexInputBindingDescription GetBindingDescription() {
-			VkVertexInputBindingDescription bindingDescription{};
-			bindingDescription.binding = 0;
-			bindingDescription.stride = sizeof(Vertex);
-			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-			return bindingDescription;
-		}
-
-		static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions() {
-			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-
-			attributeDescriptions[0].binding = 0;
-			attributeDescriptions[0].location = 0;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-			attributeDescriptions[1].binding = 0;
-			attributeDescriptions[1].location = 1;
-			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[1].offset = offsetof(Vertex, normal);
-			//attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-			//attributeDescriptions[2].binding = 0;
-			//attributeDescriptions[2].location = 2;
-			//attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-			//attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-			return attributeDescriptions;
-		}
-
-		bool operator==(const Vertex& other) const {
-			//return pos == other.pos && color == other.color && texCoord == other.texCoord;
-			return pos == other.pos && normal == other.normal;
-		}
-	};
-
-	//const std::vector<Vertex> vertices = {
-	//	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	//	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-	//	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-	//	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-	//	{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	//	{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-	//	{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-	//	{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-	//};
-
-	//const std::vector<uint16_t> indices = {
-	//	0, 1, 2, 2, 3, 0,
-	//	4, 5, 6, 6, 7, 4
-	//};
 
 	struct UniformBufferObject {
 		glm::mat4 model;
@@ -206,7 +147,6 @@ namespace Ivan {
 		VkDescriptorSetLayout descriptorSetLayout;
 		void CreateDescriptorSetLayout();
 
-
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 
 		VkRenderPass renderPass;
@@ -220,7 +160,7 @@ namespace Ivan {
 
 		std::vector<VkCommandBuffer> commandBuffers;
 		void CreateCommandBuffers();
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, struct Mesh* mesh);
 
 
 		const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -229,17 +169,14 @@ namespace Ivan {
 		std::vector<VkFence> inFlightFences;
 		void CreateSyncObjects();
 
-		std::vector<Vertex> vertices;
-		std::vector<uint32_t> indices;
+		Mesh testMesh;
 
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
-		VkBuffer indexBuffer;
-		VkDeviceMemory indexBufferMemory;
-		void LoadModel();
+		// TODO must not receive a pointer to a mesh, should only receive required data to be flexible for GPU driven rendering!!!
+		// TODO should probably be a static function in Mesh struct
+		void CreateVertexBuffer(struct Mesh* mesh);
+		void CreateIndexBuffer(struct Mesh* mesh);
+		
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-		void CreateVertexBuffer();
-		void CreateIndexBuffer();
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		
@@ -292,17 +229,5 @@ namespace Ivan {
 		void CreateColorResources();
 		void GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 
-	};
-}
-
-namespace std {
-	template<> struct hash<Ivan::Vertex> {
-		size_t operator()(Ivan::Vertex const& vertex) const {
-			//return ((hash<glm::vec3>()(vertex.pos) ^
-			//	(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-			//	(hash<glm::vec2>()(vertex.texCoord) << 1);
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.normal) << 1)) >> 1);
-		}
 	};
 }

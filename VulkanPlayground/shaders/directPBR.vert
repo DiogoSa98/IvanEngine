@@ -17,3 +17,4 @@ void main() {
     WorldPos = vec4(ubo.model * vec4(inPosition, 1.0)).xyz; // TODO vec4 required?
     Normal = vec4(ubo.model * vec4(inNormal, 1.0)).xyz;
 }
+

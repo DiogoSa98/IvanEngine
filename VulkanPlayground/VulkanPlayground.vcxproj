@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="IvanMesh.cpp" />
     <ClCompile Include="IvanVulklanApplication.cpp" />
     <ClCompile Include="IvanWindow.cpp" />
     <ClCompile Include="main.cpp" />
@@ -150,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ivan.hpp" />
+    <ClInclude Include="IvanMesh.hpp" />
     <ClInclude Include="IvanVulklanApplication.hpp" />
     <ClInclude Include="IvanWindow.hpp" />
   </ItemGroup>
