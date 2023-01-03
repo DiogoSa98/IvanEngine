@@ -569,8 +569,10 @@ namespace Ivan {
 
     
     void IvanVulkanApplication::CreateGraphicsPipeline() {
-        auto vertShaderCode = ReadFile("shaders/testVert.spv");
-        auto fragShaderCode = ReadFile("shaders/testFrag.spv");
+        //auto vertShaderCode = ReadFile("shaders/testVert.spv");
+        //auto fragShaderCode = ReadFile("shaders/testFrag.spv");
+        auto vertShaderCode = ReadFile("shaders/directPBR_vert.spv");
+        auto fragShaderCode = ReadFile("shaders/directPBR_frag.spv");
 
         VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
@@ -1003,9 +1005,10 @@ namespace Ivan {
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        //time = 0.0f;
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.3f * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * 0.3f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, .0f));
+        ubo.view = glm::lookAt(glm::vec3(3.0f, 1.5f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, .0f));
         ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1; // in OpenGL y coordinates of clip space are inverted
 
@@ -1558,12 +1561,18 @@ namespace Ivan {
                     attrib.vertices[3 * index.vertex_index + 2]
                 };
 
-                vertex.texCoord = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // obj assumes 0 is bottom but Vulkan assumes 0 is top
+                vertex.normal = {
+                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index + 1],
+                    attrib.normals[3 * index.normal_index + 2]
                 };
 
-                vertex.color = { 1.0f, 1.0f, 1.0f };
+                //vertex.texCoord = {
+                //    attrib.texcoords[2 * index.texcoord_index + 0],
+                //    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // obj assumes 0 is bottom but Vulkan assumes 0 is top
+                //};
+
+                //vertex.color = { 1.0f, 1.0f, 1.0f };
 
                 if (uniqueVertices.count(vertex) == 0) {
                     uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
